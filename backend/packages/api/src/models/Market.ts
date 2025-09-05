@@ -18,6 +18,7 @@ export interface IMarket extends Document {
   updatedAt: Date;
   solanaTransactionHash?: string;
   marketAccount?: string;
+  bondMint?: string;
 }
 
 const MarketSchema: Schema = new Schema({
@@ -87,6 +88,10 @@ const MarketSchema: Schema = new Schema({
     sparse: true
   },
   marketAccount: {
+    type: String,
+    sparse: true
+  },
+  bondMint: {
     type: String,
     sparse: true
   }

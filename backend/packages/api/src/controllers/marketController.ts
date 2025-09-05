@@ -13,99 +13,47 @@ interface CreateMarketRequest {
   couponRate: number;
   faceValue: number;
   currentPrice: number;
+  solanaTransactionHash?: string;
+  marketAccount?: string;
+  bondMint?: string;
 }
 
-export const createMarket = async (req: Request, res: Response): Promise<void> => {
+export const createMarket = async (req: Request<{}, {}, CreateMarketRequest>, res: Response) => {
   try {
-    const {
+    const { 
+      issuer, 
+      bondName, 
+      bondSymbol, 
+      totalSupply, 
+      maturityDate, 
+      couponRate, 
+      faceValue, 
+      currentPrice,
+      solanaTransactionHash,
+      marketAccount,
+      bondMint
+    } = req.body;
+
+    const market = new Market({
+      marketId: uuidv4(),
       issuer,
       bondName,
       bondSymbol,
       totalSupply,
-      maturityDate,
-      couponRate,
-      faceValue,
-      currentPrice
-    }: CreateMarketRequest = req.body;
-
-    // Validate required fields
-    if (!issuer || !bondName || !bondSymbol || !totalSupply || !maturityDate || 
-        couponRate === undefined || !faceValue || !currentPrice) {
-      res.status(400).json({
-        success: false,
-        error: 'Missing required fields'
-      });
-      return;
-    }
-
-    // Validate issuer is a valid Solana public key
-    try {
-      new PublicKey(issuer);
-    } catch (error) {
-      res.status(400).json({
-        success: false,
-        error: 'Invalid issuer public key'
-      });
-      return;
-    }
-
-    // Validate maturity date is in the future
-    const maturity = new Date(maturityDate);
-    if (maturity <= new Date()) {
-      res.status(400).json({
-        success: false,
-        error: 'Maturity date must be in the future'
-      });
-      return;
-    }
-
-    // Generate unique market ID
-    const marketId = uuidv4();
-
-    // Create market document
-    const market: IMarket = new Market({
-      marketId,
-      issuer,
-      bondName,
-      bondSymbol,
-      totalSupply,
-      maturityDate: maturity,
+      maturityDate: new Date(maturityDate),
       couponRate,
       faceValue,
       currentPrice,
-      totalBondsIssued: 0,
-      bondsSold: 0,
-      status: 'active'
+      solanaTransactionHash,
+      marketAccount,
+      bondMint
     });
 
-    // Save to database
-    await market.save();
-
-    console.log(`✅ Market created successfully: ${marketId}`);
-
-    res.status(201).json({
-      success: true,
-      data: {
-        marketId: market.marketId,
-        issuer: market.issuer,
-        bondName: market.bondName,
-        bondSymbol: market.bondSymbol,
-        totalSupply: market.totalSupply,
-        maturityDate: market.maturityDate,
-        couponRate: market.couponRate,
-        faceValue: market.faceValue,
-        currentPrice: market.currentPrice,
-        status: market.status,
-        createdAt: market.createdAt
-      }
-    });
-
+    const savedMarket = await market.save();
+    res.status(201).json(savedMarket);
   } catch (error) {
-    console.error('❌ Error creating market:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Internal server error'
-    });
+    console.error('Error creating market:', error);
+    res.status(500).json({ error: 'Failed to create market' });
   }
 };
 

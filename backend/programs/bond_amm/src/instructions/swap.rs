@@ -1,8 +1,24 @@
 // File: programs/bond_amm/src/instructions/swap.rs
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Token, TokenAccount, Transfer, Mint};
-use crate::state::{AmmState, MarketState};
+use crate::state::AmmState;
 use crate::constants::FEE_BPS;
+
+// Import MarketState from the factory program
+// This is a copy of the MarketState struct from bond_factory
+#[account]
+pub struct MarketState {
+    pub admin: Pubkey,
+    pub market_authority: Pubkey,
+    pub bond_mint: Pubkey,
+    pub quote_mint: Pubkey,
+    pub issuer_name: String,
+    pub maturity_timestamp: i64,
+    pub coupon_rate_bps: u16,
+    pub is_matured: bool,
+    pub market_bump: u8,
+    pub market_authority_bump: u8,
+}
 
 #[derive(Accounts)]
 pub struct InitializeAmm<'info> {
@@ -18,16 +34,14 @@ pub struct InitializeAmm<'info> {
     )]
     pub amm_state: Account<'info, AmmState>,
 
-    #[account(
-        seeds = [b"market", market.bond_mint.as_ref()],
-        bump = market.market_bump
-    )]
+    /// The market account created by the bond factory
+    /// CHECK: This account is owned by the bond factory program
     pub market: Account<'info, MarketState>,
 
     /// CHECK: Authority PDA owned by the factory.
     #[account(
         seeds = [b"authority", market.key().as_ref()],
-        bump = market.market_authority_bump
+        bump
     )]
     pub market_authority: AccountInfo<'info>,
 
@@ -38,7 +52,9 @@ pub struct InitializeAmm<'info> {
         init,
         payer = admin,
         token::mint = bond_mint,
-        token::authority = market_authority
+        token::authority = market_authority,
+        seeds = [b"vault", market.key().as_ref(), bond_mint.key().as_ref()],
+        bump
     )]
     pub bond_vault: Account<'info, TokenAccount>,
     
@@ -49,7 +65,9 @@ pub struct InitializeAmm<'info> {
         init,
         payer = admin,
         token::mint = quote_mint,
-        token::authority = market_authority
+        token::authority = market_authority,
+        seeds = [b"vault", market.key().as_ref(), quote_mint.key().as_ref()],
+        bump
     )]
     pub quote_vault: Account<'info, TokenAccount>,
 
@@ -63,7 +81,7 @@ pub struct Swap<'info> {
     pub user: Signer<'info>,
 
     #[account(
-        seeds = [b"market", market.bond_mint.as_ref()],
+        seeds = [b"market", market.issuer_name.as_bytes()],
         bump = market.market_bump
     )]
     pub market: Account<'info, MarketState>,
@@ -71,7 +89,7 @@ pub struct Swap<'info> {
     /// CHECK: Authority PDA owned by the factory.
     #[account(
         seeds = [b"authority", market.key().as_ref()],
-        bump = market.market_authority_bump
+        bump
     )]
     pub market_authority: AccountInfo<'info>,
     

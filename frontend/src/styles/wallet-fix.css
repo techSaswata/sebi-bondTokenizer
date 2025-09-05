@@ -1,0 +1,13 @@
+/* Simple fix for Phantom wallet dropdown click issues */
+
+/* Only target the dropdown list items to make them clickable */
+.wallet-adapter-dropdown-list-item {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
+
+/* Ensure dropdown list is properly positioned and clickable */
+.wallet-adapter-dropdown-list {
+  pointer-events: auto !important;
+  z-index: 9999 !important;
+}

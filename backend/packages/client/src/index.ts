@@ -57,9 +57,23 @@ export class BondMarketClient {
     admin: Keypair
   ) {
     try {
-      const marketKeypair = Keypair.generate();
-      const bondMintKeypair = Keypair.generate();
-      const marketAuthorityKeypair = Keypair.generate();
+      // Derive market PDA from issuerName
+      const [marketPda, marketBump] = web3.PublicKey.findProgramAddressSync(
+        [Buffer.from("market"), Buffer.from(marketParams.issuerName)],
+        this.bondFactoryProgram.programId
+      );
+
+      // Derive marketAuthority PDA from marketPda
+      const [marketAuthorityPda, marketAuthorityBump] = web3.PublicKey.findProgramAddressSync(
+        [Buffer.from("authority"), marketPda.toBuffer()],
+        this.bondFactoryProgram.programId
+      );
+
+      // Derive bondMint PDA from marketPda
+      const [bondMintPda, bondMintBump] = web3.PublicKey.findProgramAddressSync(
+        [Buffer.from("bond_mint"), marketPda.toBuffer()],
+        this.bondFactoryProgram.programId
+      );
 
       const tx = await this.bondFactoryProgram.methods
         .createMarket(
@@ -69,22 +83,22 @@ export class BondMarketClient {
         )
         .accounts({
           admin: admin.publicKey,
-          market: marketKeypair.publicKey,
-          bondMint: bondMintKeypair.publicKey,
-          marketAuthority: marketAuthorityKeypair.publicKey,
+          market: marketPda,
+          bondMint: bondMintPda,
+          marketAuthority: marketAuthorityPda,
           systemProgram: web3.SystemProgram.programId,
           tokenProgram: TOKEN_PROGRAM_ID,
           rent: web3.SYSVAR_RENT_PUBKEY,
         })
-        .signers([marketKeypair, bondMintKeypair, marketAuthorityKeypair, admin])
+        .signers([admin])
         .rpc();
 
       return {
         success: true,
         transaction: tx,
-        market: marketKeypair.publicKey,
-        bondMint: bondMintKeypair.publicKey,
-        marketAuthority: marketAuthorityKeypair.publicKey,
+        market: marketPda,
+        bondMint: bondMintPda,
+        marketAuthority: marketAuthorityPda,
       };
     } catch (error) {
       console.error('Error creating market:', error);
@@ -124,18 +138,28 @@ export class BondMarketClient {
       market: PublicKey;
       bondMint: PublicKey;
       quoteMint: PublicKey;
+      issuerName: string;
     },
     admin: Keypair
   ) {
     try {
       const ammStateKeypair = Keypair.generate();
 
+      // Derive factoryMarketPda using issuerName (must be passed in ammParams)
+      if (!ammParams.issuerName) {
+        throw new Error('issuerName is required in ammParams for correct PDA derivation');
+      }
+      const [factoryMarketPda] = PublicKey.findProgramAddressSync(
+        [Buffer.from("market"), Buffer.from(ammParams.issuerName)],
+        this.bondFactoryProgram.programId
+      );
+
       const tx = await this.bondAMMProgram.methods
         .initializeAmm()
         .accounts({
           admin: admin.publicKey,
           ammState: ammStateKeypair.publicKey,
-          market: ammParams.market,
+          market: factoryMarketPda, // Correct PDA, owned by bond_factory
           marketAuthority: ammParams.market, // This should be the market authority PDA
           bondMint: ammParams.bondMint,
           bondVault: ammParams.bondMint, // This should be the bond vault PDA

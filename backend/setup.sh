@@ -79,7 +79,7 @@ cat << EOF
 🎉 Bond Market Project Setup Complete!
 
 📊 Project Status:
-- ✅ MongoDB URI configured: mongodb+srv://vsblicmdrt62_db_user:***@sebi.0hqvrmp.mongodb.net/
+- ✅ MongoDB URI configured: mongodb+srv://vsblicmdrt62_db_user:***@sebi.0hqvrmp.mongodb.net/test
 - ✅ API server configured on port 3001
 - ✅ Solana configured for devnet
 - ✅ Environment variables set up

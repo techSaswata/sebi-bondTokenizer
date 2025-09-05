@@ -7,7 +7,7 @@ pub mod constants;
 
 use instructions::*;
 
-declare_id!("3YwVMmAgU9dCQaTSQb71FdqUrsrUvD6vGwbQAnBFvaBE");
+declare_id!("2PgJbyjvWCGmUipMokJ148ymXta2hU6yNeyg5oEPUEjD");
 
 #[program]
 pub mod bond_amm {
