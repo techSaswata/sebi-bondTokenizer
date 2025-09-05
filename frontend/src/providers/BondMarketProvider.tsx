@@ -341,7 +341,7 @@ export const BondMarketProvider: React.FC<BondMarketProviderProps> = ({ children
 
       console.log('🚀 Sending initializeAmm transaction...');
       const tx = await program.methods
-        .initializeAmm()
+        .initializeAmm(factoryMarketPda)
         .accounts(accounts)
         .rpc();
 
@@ -349,7 +349,7 @@ export const BondMarketProvider: React.FC<BondMarketProviderProps> = ({ children
       return {
         success: true,
         signature: tx,
-      };
+     };
     } catch (error) {
       console.error('❌ Error initializing AMM:', error);
       console.error('❌ Error details:', {

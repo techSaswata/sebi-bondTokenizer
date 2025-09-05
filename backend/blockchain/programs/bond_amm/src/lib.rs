@@ -14,8 +14,8 @@ pub mod bond_amm {
     use super::*;
 
     /// Initializes the AMM for a specific market, creating the vaults.
-    pub fn initialize_amm(ctx: Context<InitializeAmm>) -> Result<()> {
-        instructions::swap::handle_initialize_amm(ctx)
+    pub fn initialize_amm(ctx: Context<InitializeAmm>, market_address: Pubkey) -> Result<()> {
+        instructions::swap::handle_initialize_amm(ctx, market_address)
     }
 
     /// Swaps one token for another in the liquidity pool.

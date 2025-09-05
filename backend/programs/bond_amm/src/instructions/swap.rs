@@ -21,6 +21,7 @@ pub struct MarketState {
 }
 
 #[derive(Accounts)]
+#[instruction(market_address: Pubkey)]
 pub struct InitializeAmm<'info> {
     #[account(mut)]
     pub admin: Signer<'info>,
@@ -29,18 +30,18 @@ pub struct InitializeAmm<'info> {
         init,
         payer = admin,
         space = AmmState::LEN,
-        seeds = [b"amm", market.key().as_ref()],
+        seeds = [b"amm", market_address.as_ref()],
         bump
     )]
     pub amm_state: Account<'info, AmmState>,
 
     /// The market account created by the bond factory
     /// CHECK: This account is owned by the bond factory program
-    pub market: Account<'info, MarketState>,
+    pub market: AccountInfo<'info>,
 
     /// CHECK: Authority PDA owned by the factory.
     #[account(
-        seeds = [b"authority", market.key().as_ref()],
+        seeds = [b"authority", market_address.as_ref()],
         bump
     )]
     pub market_authority: AccountInfo<'info>,
@@ -53,7 +54,7 @@ pub struct InitializeAmm<'info> {
         payer = admin,
         token::mint = bond_mint,
         token::authority = market_authority,
-        seeds = [b"vault", market.key().as_ref(), bond_mint.key().as_ref()],
+        seeds = [b"vault", market_address.as_ref(), bond_mint.key().as_ref()],
         bump
     )]
     pub bond_vault: Account<'info, TokenAccount>,
@@ -66,7 +67,7 @@ pub struct InitializeAmm<'info> {
         payer = admin,
         token::mint = quote_mint,
         token::authority = market_authority,
-        seeds = [b"vault", market.key().as_ref(), quote_mint.key().as_ref()],
+        seeds = [b"vault", market_address.as_ref(), quote_mint.key().as_ref()],
         bump
     )]
     pub quote_vault: Account<'info, TokenAccount>,
@@ -108,9 +109,9 @@ pub struct Swap<'info> {
     pub token_program: Program<'info, Token>,
 }
 
-pub fn handle_initialize_amm(ctx: Context<InitializeAmm>) -> Result<()> {
+pub fn handle_initialize_amm(ctx: Context<InitializeAmm>, market_address: Pubkey) -> Result<()> {
     let amm_state = &mut ctx.accounts.amm_state;
-    amm_state.market = ctx.accounts.market.key();
+    amm_state.market = market_address;
     amm_state.amm_bump = ctx.bumps.amm_state;
     Ok(())
 }

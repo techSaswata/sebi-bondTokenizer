@@ -25,6 +25,8 @@ const MarketSchema: Schema = new Schema({
   dailyVolume: { type: Number, default: 0 },
   ytm: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now },
+}, {
+  collection: 'markets'
 });
 
 export default mongoose.model<IMarket>('Market', MarketSchema);

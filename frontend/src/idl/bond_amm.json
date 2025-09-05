@@ -42,8 +42,8 @@
                 ]
               },
               {
-                "kind": "account",
-                "path": "market"
+                "kind": "arg",
+                "path": "market_address"
               }
             ]
           }
@@ -90,8 +90,8 @@
                 ]
               },
               {
-                "kind": "account",
-                "path": "market"
+                "kind": "arg",
+                "path": "market_address"
               }
             ]
           }
@@ -131,7 +131,12 @@
           "address": "SysvarRent111111111111111111111111111111111"
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "market_address",
+          "type": "publicKey"
+        }
+      ]
     },
     {
       "name": "swap",
@@ -195,8 +200,8 @@
                 ]
               },
               {
-                "kind": "account",
-                "path": "market"
+                "kind": "arg",
+                "path": "market_address"
               }
             ]
           }
